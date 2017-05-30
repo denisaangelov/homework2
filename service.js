@@ -14,6 +14,17 @@ module.exports = class PostService {
         });
     }
 
+    findPost(postId, callback) {
+        fs.readFile(this.filename, function (err, data) {
+            if (err) {
+                callback(err);
+            }
+            const jsonData = JSON.parse(data);
+            const post = jsonData.filter((p) => { return p.id == postId });
+            callback(null, post.length ? post[0] : null);
+        });
+    }
+
     add(newPost, callback) {
         fs.readFile(this.filename, (err, data) => {
             if (err) {
@@ -62,8 +73,34 @@ module.exports = class PostService {
         });
     }
 
-    edit(postId, callback) {
-        // @todo
+    update(updated, callback) {
+        fs.readFile(this.filename, (err, data) => {
+            if (err) {
+                callback(err);
+            }
+            let postId = updated.id;
+            let posts = JSON.parse(data);
+            posts = posts.map((post, index) => {
+                if (post.id == postId) {
+                    return updated;
+                } else {
+                    return post;
+                }
+            });
+
+            console.log('TO BE UPDATED !!!', postId, updated);
+
+            if (!updated) {
+                callback(new Error(`Post with id=${postId} does not exist.`), posts);
+            } else {
+                fs.writeFile(this.filename, JSON.stringify(posts, null, 4), function (err) {
+                    if (err) {
+                        callback(err);
+                    }
+                    callback(null, posts, updated);
+                });
+            }
+        });
     }
 }
 
