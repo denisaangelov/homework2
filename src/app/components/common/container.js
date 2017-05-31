@@ -8,8 +8,28 @@ import Post from '../post';
 import Posts from '../posts';
 import About from '../about';
 
+import { filterPosts, requestPosts, receivePosts } from '../../actions';
 @withRouter
-@connect()
+@connect(
+    state => ({
+        posts: state.posts, //getVisiblePosts(state.posts, state.filterPosts)
+        filter: state.filterPosts.filter,
+        selectedPost: state.selectedPost
+    }),
+    dispatch => ({
+        filterPosts: (filter) => {
+            dispatch(filterPosts(filter));
+        },
+        requestPosts: () => {
+            dispatch(requestPosts());
+            return axios.get('/api/posts')
+                .then((response) => {
+                    // console.log(JSON.stringify(response.data));
+                    dispatch(receivePosts(response.data));
+                });
+        }
+    })
+)
 export default class Container extends React.Component {
     render() {
         return (

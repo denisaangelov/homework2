@@ -32,11 +32,11 @@ module.exports = webpackMerge(commonConfig, {
     port: 3000,
     historyApiFallback: true, // HTML 5 History API support
     stats: 'minimal', // Minimal statistics
-    // proxy: {
-    //   '/api/*': {
-    //     target: 'http://localhost:9000/',
-    //     secure: false
-    //   }
-    // },
+    proxy: {
+      '/api/*': {
+        target: 'http://localhost:3002/',
+        secure: false
+      }
+    },
   }
 });

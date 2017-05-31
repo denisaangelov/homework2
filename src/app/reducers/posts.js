@@ -1,7 +1,6 @@
 import { NEW_POST, EDIT_POST, DELETE_POST, REQUEST_POSTS, RECEIVE_POSTS } from '../actions/list';
 
-const postReducer = (state = { all: [] }, action) => {
-    console.log(action.type);
+const postReducer = (state = {}, action) => {
     switch (action.type) {
         case NEW_POST:
             return {
@@ -27,18 +26,19 @@ const postReducer = (state = { all: [] }, action) => {
     }
 };
 
-const postsReducer = (state = { all: [] }, action) => {
+const postsReducer = (state = [], action) => {
     switch (action.type) {
         case NEW_POST:
             return [
                 ...state,
                 postReducer(undefined, action)
-            ];
+            ].sort(compare);
         case EDIT_POST:
+            console.log(state);
+            console.log(action);
             return state.map(post =>
                 postReducer(post, action)
             );
-
         case DELETE_POST:
             return postReducer(state, action);
 
@@ -53,7 +53,8 @@ const postsReducer = (state = { all: [] }, action) => {
 };
 
 const receivePosts = (state, action) => {
-    return Object.assign({}, state, { all: action.posts.sort(compare) });
+    const posts = action.posts.sort(compare);
+    return posts;
 }
 
 const compare = (a, b) => {

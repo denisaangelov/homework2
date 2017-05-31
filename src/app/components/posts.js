@@ -11,7 +11,7 @@ import dateFormat from 'dateformat';
 import Post from './post';
 import shallowEquals from '../common/utils/shallow-equals';
 
-import { editPost, filterPosts, deletePost, requestPosts, receivePosts } from '../actions';
+import { editPost, filterPosts, deletePost, requestPosts, receivePosts, newPost } from '../actions';
 
 const styles = {
     span: {
@@ -32,22 +32,33 @@ const compare = (a, b) => {
 
 @connect(
     state => ({
-        posts: state.posts.all, //getVisiblePosts(state.posts, state.filterPosts)
+        posts: state.posts, //getVisiblePosts(state.posts, state.filterPosts)
         filter: state.filterPosts.filter,
         selectedPost: state.selectedPost
     }),
     dispatch => ({
-        editPost: (url) => {
-            dispatch(push(url));
+        newPost: (post) => {
+            return axios.post('/api/posts/', post)
+                .then((response) => {
+                    dispatch(newPost(response.data));
+                });
+        },
+        editPost: (post) => {
+            axios.put(`/api/posts/${post.id}`, post)
+                .then((response) => {
+                    dispatch(editPost(response.data));
+                });
         },
         deletePost: (id) => {
-            dispatch(deletePost(id));
+            return axios.delete(`/api/posts/${id}`)
+                .then((response) => {
+                    dispatch(deletePost(id));
+                });
         },
         requestPosts: () => {
             dispatch(requestPosts());
             return axios.get('/api/posts')
                 .then((response) => {
-                    // console.log(JSON.stringify(response.data));
                     dispatch(receivePosts(response.data));
                 });
         }
@@ -55,23 +66,32 @@ const compare = (a, b) => {
 )
 export default class Posts extends React.Component {
     static propTypes = {
-        editPost: PropTypes.func.isRequired,
-        deletePost: PropTypes.func.isRequired
     };
 
     constructor(props) {
         super(props);
-        console.log('props');
-        console.log(props);
         this.state = {
             posts: props.posts,
-            filter: props.filter
+            filter: props.filter,
+            post: {
+                id: '',
+                title: '',
+                author: '',
+                text: '',
+                tags: '',
+                status: 'Active',
+                date: Date.now()
+            }
         }
+    }
+
+    componentWillMount() {
+        console.log('componentWillMount');
+        this.props.requestPosts();
     }
 
     componentWillReceiveProps(nextProps) {
         console.log('componentWillReceiveProps');
-        console.log(nextProps);
         const posts = nextProps.posts;
         if (posts && !shallowEquals(posts, this.state.posts)) {
             this.setState({
@@ -86,15 +106,18 @@ export default class Posts extends React.Component {
     }
 
     render() {
-        console.log('state');
-        console.log(this.state);
-
         let posts = (this.props.list && this.state.posts.length) ? this._getListPosts() : this.state.posts;
 
         let result = null;
         if (posts.length)
             result = (
                 <div className="col-sm-12 col-md-12 col-lg-12">
+                    {this.props.list ? null :
+                        <div className="row">
+                            <div className="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                <Button bsStyle="primary" title='New post' onClick={(e) => { this._handleReset(e); }}>New</Button>
+                            </div>
+                        </div>}
                     <div className="row">
                         <div className={this.props.list ? "col-xs-12 col-sm-12 col-md-12 col-lg-12" : "col-xs-8 col-sm-8 col-md-8 col-lg-8"} style={styles.col}>
                             <ListGroup>
@@ -151,7 +174,7 @@ export default class Posts extends React.Component {
                             ? null
                             :
                             <div className="col-sm-4 col-md-4 col-lg-4">
-                                <Post />
+                                <Post post={this.state.post} handleChange={this._handleChange} handleReset={this._handleReset} handleSubmit={this._handleSubmit} />
                             </div>
                         }
                     </div>
@@ -164,19 +187,75 @@ export default class Posts extends React.Component {
         return this.state.posts.filter(post => this.state.filter === 'All' ? true : post.status === this.state.filter).slice(0, 15);
     }
 
+    _getPost = (id) => {
+        axios.get(`/api/posts/${id}`)
+            .then((response) => {
+                this.setState({
+                    post: Object.assign({}, this.state.post, response.data)
+                });
+            });
+    }
+
     _handleOnClick = (e) => {
         e.preventDefault();
     }
 
     _handleEdit = (e, id) => {
         e.preventDefault();
-        this.props.editPost(flag ? `/posts/${id}` : '/');
+        this._getPost(id);
+        // this.props.editPost(flag ? `/posts/${id}` : '/');
 
     }
 
     _handleDelete = (e, id) => {
         e.preventDefault();
-        // this.props.deletePost(id);
-        axios.delete(`/api/posts/${id}`);
+        this.props.deletePost(id);
+    }
+
+    /**
+     * post
+     */
+    _handleChange = (e, field) => {
+        this.setState({
+            post: Object.assign({}, this.state.post, {
+                [field]: e.target.value
+            })
+        });
+    }
+
+    _handleReset = (e) => {
+        this.setState({
+            post: {
+                id: '',
+                title: '',
+                author: '',
+                text: '',
+                tags: '',
+                status: 'Active',
+                date: Date.now()
+            }
+        });
+    }
+
+    _handleSubmit = (e) => {
+        e.preventDefault();
+        let isEmpty = false;
+        Object.values(this.state.post).some((value) => {
+            if (value === '')
+                isEmpty = true;
+            return isEmpty;
+        });
+        if (isEmpty)
+            return false;
+
+        if (this.state.post)
+            if (this.state.post.id && this.state.post.id !== '') {
+                this.props.editPost(this.state.post);
+            }
+            else {
+                this.props.newPost(this.state.post);
+            }
+
+        this._handleReset();
     }
 }

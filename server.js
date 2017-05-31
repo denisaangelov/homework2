@@ -18,9 +18,9 @@ const server = http.createServer((req, res) => {
     if (req.method === 'GET') {
         let resource = pathname.substr(1);
         let path = resource.split('/');
-
-        if (path.length > 1 && path[0] === 'api') {
-            if (path[1] === 'posts') {
+        console.log(`PATH: ${path}`);
+        if (path.length > 1 && path[0] === 'api' || path[0] === 'posts') {
+            if (typeof path[1] === 'undefined' || path[1] === 'posts') {
                 if (typeof path[2] === 'undefined') {
                     service.findAll((err, posts) => {
                         if (err) {
@@ -132,7 +132,7 @@ const server = http.createServer((req, res) => {
 
                     service.add(newPost, (err, posts, newPost) => {
                         res.writeHead(201, { 'Content-Type': 'application/json', 'Location': `http://localhost:${port}/posts/${newPost.id}` });
-                        res.end(JSON.stringify(posts));
+                        res.end(JSON.stringify(newPost));
                     });
                 });
             }
@@ -148,7 +148,6 @@ const server = http.createServer((req, res) => {
 
         if (path.length === 3 && path[0] === 'api' && path[1] === 'posts') {
             const postId = path[path.length - 1];
-            console.log('PostId to be deleted:', postId);
             res.on('error', function (err) {
                 console.error(err);
             });
@@ -191,7 +190,7 @@ const server = http.createServer((req, res) => {
                 service.update(updatePost, (err, posts, updated) => {
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     console.log(`updated`);
-                    res.end(JSON.stringify(posts));
+                    res.end(JSON.stringify(updated));
                 });
             });
         }

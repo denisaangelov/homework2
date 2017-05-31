@@ -9,10 +9,10 @@ class FilterChooser extends React.Component {
 
     render() {
         return (
-            <FormControl componentClass="select" onChange={(e) => this._handleOnChange(e)}>
-                <option value="All" selected={this.props.filter === 'All'}>All</option>
-                <option value="Active" selected={this.props.filter === 'Active'}>Active</option>
-                <option value="Inactive" selected={this.props.filter === 'Inactive'}>Inactive</option>
+            <FormControl componentClass="select" onChange={(e) => this._handleOnChange(e)} value={this.props.filter}>
+                <option value="All">All</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
             </FormControl>
         )
     }

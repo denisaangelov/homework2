@@ -6,7 +6,7 @@ import { Button } from 'react-bootstrap';
 
 import axios from 'axios';
 
-import { filterPosts, deletePost, requestPosts, receivePosts } from '../actions';
+import { filterPosts, requestPosts, receivePosts } from '../actions';
 
 import FilterChooser from './filter-chooser';
 import Posts from './posts';
@@ -16,25 +16,16 @@ const styles = {
         textAlign: 'center'
     }
 }
-
 @connect(
-    state => ({
-        posts: state.posts.all, //getVisiblePosts(state.posts, state.filterPosts)
-        filter: state.filterPosts.filter,
-        selectedPost: state.selectedPost
-    }),
+    state => ({}),
     dispatch => ({
         filterPosts: (filter) => {
             dispatch(filterPosts(filter));
-        },
-        deletePost: (id) => {
-            dispatch(deletePost(id));
         },
         requestPosts: () => {
             dispatch(requestPosts());
             return axios.get('/api/posts')
                 .then((response) => {
-                    // console.log(JSON.stringify(response.data));
                     dispatch(receivePosts(response.data));
                 });
         }
@@ -42,8 +33,6 @@ const styles = {
 )
 export default class Home extends React.Component {
     static propTypes = {
-        filterPosts: PropTypes.func.isRequired,
-        deletePost: PropTypes.func.isRequired
     };
 
     constructor(props) {

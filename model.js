@@ -6,6 +6,6 @@ module.exports = class Post {
         this.text = text;
         this.tags = '';
         this.status = 'Active';
-        this.date = new Date();
+        this.date = Date.now();
     }
 }
