@@ -176,5 +176,5 @@ const tempdb = [
         tags: 'javascript react bootstrap',
         status: 'Active',
         date: new Date(1991, 4, 12)
-    },
+    }
 ]

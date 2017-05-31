@@ -225,7 +225,7 @@ export default class Posts extends React.Component {
 
     _handleReset = (e) => {
         this.setState({
-            post: {
+            post: Object.assign({}, this.state.post, {
                 id: '',
                 title: '',
                 author: '',
@@ -234,20 +234,24 @@ export default class Posts extends React.Component {
                 status: 'Active',
                 date: Date.now()
             }
+            )
         });
     }
 
     _handleSubmit = (e) => {
         e.preventDefault();
+
         let isEmpty = false;
-        Object.values(this.state.post).some((value) => {
+        let posts = Object.assign({}, this.state.post);
+        delete posts['id'];
+        Object.values(posts).some((value) => {
             if (value === '')
                 isEmpty = true;
             return isEmpty;
         });
         if (isEmpty)
             return false;
-
+        console.log(this.state.post);
         if (this.state.post)
             if (this.state.post.id && this.state.post.id !== '') {
                 this.props.editPost(this.state.post);
