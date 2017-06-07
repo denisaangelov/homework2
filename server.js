@@ -27,7 +27,7 @@ const server = http.createServer((req, res) => {
                             // 500: File not found
                             console.error(`Error reading file: ${err.message}`);
                             res.writeHead(500, { 'Content-Type': 'text/html' }); //TODO set appropriate MIME type
-                            res.write(`
+                            res.end(`
                             <html>
                                 <body>
                                     <p>Sorry DB file not found</p>
@@ -46,7 +46,7 @@ const server = http.createServer((req, res) => {
                             // 500: File not found
                             console.error(`Error reading file: ${err.message}`);
                             res.writeHead(500, { 'Content-Type': 'text/html' }); //TODO set appropriate MIME type
-                            res.write(`
+                            res.end(`
                             <html>
                                 <body>
                                     <p>Sorry DB file not found</p>
@@ -61,14 +61,8 @@ const server = http.createServer((req, res) => {
                                 res.end(JSON.stringify(post));
                             } else {
                                 console.error(`Error fidning post: ${postId}`);
-                                res.writeHead(404, { 'Content-Type': 'text/html' }); //TODO set appropriate MIME type
-                                res.write(`
-                                <html>
-                                    <body>
-                                        <p>Post not found.</p>
-                                    </body>
-                                </html>
-                                `);
+                                res.writeHead(404, { 'Content-Type': 'text/plain' }); //TODO set appropriate MIME type
+                                res.end(`Post with id=${postId} not found.`);
                             }
                         }
                     });
@@ -85,18 +79,12 @@ const server = http.createServer((req, res) => {
                 if (err) {
                     // 404: File not found
                     console.error(`Error reading file: ${err.message}`, resource);
-                    res.writeHead(404, { 'Content-Type': 'text/html' }); //TODO set appropriate MIME type
-                    res.write(`
-                    <html>
-                        <body>
-                            <p>Sorry file '${resource}' not found</p>
-                        </body>
-                    </html>
-                `);
+                    res.writeHead(404, { 'Content-Type': 'text/plani' }); //TODO set appropriate MIME type
+                    res.end(`File '${resource}' not found.`);
                 } else {
                     // 200: OK
                     res.writeHead(200, { 'Content-Type': 'text/html' });
-                    res.write(data.toString());
+                    res.end(data.toString());
                 }
 
                 res.end();
@@ -131,8 +119,14 @@ const server = http.createServer((req, res) => {
                     });
 
                     service.add(newPost, (err, posts, newPost) => {
-                        res.writeHead(201, { 'Content-Type': 'application/json', 'Location': `http://localhost:${port}/posts/${newPost.id}` });
-                        res.end(JSON.stringify(newPost));
+                        if (err) {
+                            console.log(`${err.error.name}: ${err.error.message}`);
+                            res.writeHead(err.code, { 'Content-Type': 'text/plain' });
+                            res.end(`${err.error.name}: ${err.error.message}`);
+                        } else {
+                            res.writeHead(201, { 'Content-Type': 'application/json', 'Location': `http://localhost:${port}/posts/${newPost.id}` });
+                            res.end(JSON.stringify(newPost));
+                        }
                     });
                 });
             }
@@ -154,8 +148,14 @@ const server = http.createServer((req, res) => {
 
             // delete post by id
             service.delete(postId, (err, posts, deleted) => {
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(posts));
+                if (err) {
+                    console.log(`${err.error.name}: ${err.error.message}`);
+                    res.writeHead(err.code, { 'Content-Type': 'text/plain' });
+                    res.end(`${err.error.name}: ${err.error.message}`);
+                } else {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(posts));
+                }
             });
         }
     } else if (req.method === 'PUT') {
@@ -188,9 +188,15 @@ const server = http.createServer((req, res) => {
 
                 // update post by id
                 service.update(updatePost, (err, posts, updated) => {
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    console.log(`updated`);
-                    res.end(JSON.stringify(updated));
+                    if (err) {
+                        console.log(`${err.error.name}: ${err.error.message}`);
+                        res.writeHead(err.code, { 'Content-Type': 'text/plain' });
+                        res.end(`${err.error.name}: ${err.error.message}`);
+                    } else {
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        console.log(`updated`);
+                        res.end(JSON.stringify(updated));
+                    }
                 });
             });
         }
@@ -226,7 +232,7 @@ const server = http.createServer((req, res) => {
                 body: body
             };
 
-            res.write(JSON.stringify(resBody));
+            res.end(JSON.stringify(resBody));
             res.end();
         });
     }

@@ -190,6 +190,7 @@ export default class Posts extends React.Component {
     _getPost = (id) => {
         axios.get(`/api/posts/${id}`)
             .then((response) => {
+                console.log(response);
                 this.setState({
                     post: Object.assign({}, this.state.post, response.data)
                 });
@@ -233,25 +234,25 @@ export default class Posts extends React.Component {
                 tags: '',
                 status: 'Active',
                 date: Date.now()
-            }
-            )
+            })
         });
     }
 
     _handleSubmit = (e) => {
         e.preventDefault();
 
-        let isEmpty = false;
-        let posts = Object.assign({}, this.state.post);
-        delete posts['id'];
-        Object.values(posts).some((value) => {
-            if (value === '')
-                isEmpty = true;
-            return isEmpty;
-        });
-        if (isEmpty)
-            return false;
-        console.log(this.state.post);
+        // let isEmpty = false;
+        // let posts = Object.assign({}, this.state.post);
+        // delete posts['id'];
+        // Object.values(posts).some((value) => {
+        //     if (value === '')
+        //         isEmpty = true;
+        //     return isEmpty;
+        // });
+        // if (isEmpty)
+        //     return false;
+        // console.log(this.state.post);
+
         if (this.state.post)
             if (this.state.post.id && this.state.post.id !== '') {
                 this.props.editPost(this.state.post);

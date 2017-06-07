@@ -9,8 +9,9 @@ module.exports = class PostService {
         fs.readFile(this.filename, function (err, data) {
             if (err) {
                 callback(err);
+            } else {
+                callback(null, JSON.parse(data));
             }
-            callback(null, JSON.parse(data));
         });
     }
 
@@ -18,89 +19,136 @@ module.exports = class PostService {
         fs.readFile(this.filename, function (err, data) {
             if (err) {
                 callback(err);
+            } else {
+                const jsonData = JSON.parse(data);
+                const post = jsonData.filter((p) => { return p.id == postId });
+                callback(null, post.length ? post[0] : null);
             }
-            const jsonData = JSON.parse(data);
-            const post = jsonData.filter((p) => { return p.id == postId });
-            callback(null, post.length ? post[0] : null);
         });
     }
 
     add(newPost, callback) {
-        fs.readFile(this.filename, (err, data) => {
-            if (err) {
-                callback(err);
-            }
-            newPost.id = Date.now();
-            var posts = JSON.parse(data);
-            posts.push(newPost);
-            fs.writeFile(this.filename, JSON.stringify(posts, null, 4), function (err) {
+        let err = this.validate(newPost);
+        if (err)
+            callback(err, null, newPost);
+        else {
+            fs.readFile(this.filename, (err, data) => {
                 if (err) {
-                    throw err;
+                    callback(err);
+                } else {
+                    newPost.id = Date.now();
+                    var posts = JSON.parse(data);
+                    posts.push(newPost);
+                    fs.writeFile(this.filename, JSON.stringify(posts, null, 4), function (err) {
+                        if (err) {
+                            throw err;
+                        } else {
+                            callback(null, posts, newPost);
+                        }
+                    });
                 }
-                callback(null, posts, newPost);
             });
-        });
+        }
     }
 
     delete(postId, callback) {
         fs.readFile(this.filename, (err, data) => {
             if (err) {
                 callback(err);
-            }
-            let posts = JSON.parse(data);
-            let deleted;
-            posts = posts.filter((post, index) => {
-                if (post.id == postId) {
-                    deleted = post;
-                    return false;
-                } else {
-                    return true;
-                }
-            });
-
-            console.log('TO BE DELETED !!!', postId, deleted);
-
-            if (!deleted) {
-                callback(new Error(`Post with id=${postId} does not exist.`), posts);
             } else {
-                fs.writeFile(this.filename, JSON.stringify(posts, null, 4), function (err) {
-                    if (err) {
-                        callback(err);
-                    }
-                    callback(null, posts, deleted);
+                let posts = JSON.parse(data);
+                let deleted;
+                posts = posts.filter((post, index) => {
+                    if (post.id == postId) {
+                        deleted = post;
+                        return false;
+                    } else
+                        return true;
                 });
+
+                console.log('TO BE DELETED !!!', postId, deleted);
+
+                if (!deleted)
+                    callback(Object.assign({}, {
+                        error: new Error(`Post with id=${postId} does not exist.`),
+                        code: 404
+                    }), posts);
+                else {
+                    fs.writeFile(this.filename, JSON.stringify(posts, null, 4), function (err) {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            callback(null, posts, deleted);
+                        }
+                    });
+                }
             }
         });
     }
 
     update(updated, callback) {
         fs.readFile(this.filename, (err, data) => {
-            if (err) {
+            if (err)
                 callback(err);
-            }
-            let postId = updated.id;
-            let posts = JSON.parse(data);
-            posts = posts.map((post, index) => {
-                if (post.id == postId) {
-                    return updated;
-                } else {
-                    return post;
-                }
-            });
-
-            console.log('TO BE UPDATED !!!', postId, updated);
-
-            if (!updated) {
-                callback(new Error(`Post with id=${postId} does not exist.`), posts);
-            } else {
-                fs.writeFile(this.filename, JSON.stringify(posts, null, 4), function (err) {
-                    if (err) {
-                        callback(err);
+            else {
+                let postId = updated.id;
+                let posts = JSON.parse(data);
+                let isFound = false;
+                posts = posts.map((post, index) => {
+                    if (post.id == postId) {
+                        isFound = true;
+                        return updated;
+                    } else {
+                        return post;
                     }
-                    callback(null, posts, updated);
                 });
+
+                if (!isFound) {
+                    callback({
+                        error: new Error(`Post with id=${postId} does not exist.`),
+                        code: 404
+                    }, posts);
+                } else {
+                    let err = this.validate(updated);
+                    if (err)
+                        callback(err, null, updated);
+
+                    console.log('TO BE UPDATED !!!', postId, updated);
+                    fs.writeFile(this.filename, JSON.stringify(posts, null, 4), function (err) {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            callback(null, posts, updated);
+                        }
+                    });
+                }
             }
         });
+    }
+
+    validate(post) {
+        let result;
+        let key = '';
+
+        let isEmpty = false;
+        let object = Object.assign({}, post);
+        delete object['id'];
+
+        for (let k in object) {
+            if (object[k] === '') {
+                isEmpty = true;
+                key = k;
+                break;
+            }
+        }
+        if (isEmpty) {
+            return {
+                error: new Error(`Ivalid '${key}' field`),
+                code: 442
+            };
+        }
+
+        return null;
     }
 }
 

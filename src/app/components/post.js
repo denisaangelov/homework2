@@ -45,6 +45,7 @@ export default class Home extends React.Component {
     render() {
         return (
             <Form>
+                {<FieldGroup id='formId' label='Id' type='text' placeholder="Post ID" value={this.state.post.id} disabled />}
                 {<FieldGroup id='formTitle' label='Title' type='text' placeholder="Enter title" value={this.state.post.title} onChange={(e) => this.props.handleChange(e, 'title')} />}
                 {<FieldGroup id='formAuthor' label='Author' type='text' placeholder="Enter author" value={this.state.post.author} onChange={(e) => this.props.handleChange(e, 'author')} />}
                 {<FieldGroup id='formText' label='Text' type='text' placeholder="Enter text" componentClass="textarea" value={this.state.post.text} onChange={(e) => this.props.handleChange(e, 'text')} />}
